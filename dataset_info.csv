@@ -1,0 +1,9 @@
+Property,Value
+Dataset,Breast Cancer Wisconsin (Diagnostic)
+Instances,569
+Features,30
+Problem Type,Binary Classification
+Target Encoding,"0 = malignant, 1 = benign"
+Train Size,455
+Test Size,114
+Random State,42
