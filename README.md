@@ -1,6 +1,6 @@
-# 🧬 Breast Cancer Classification ML Lab
+# 🧬 Breast Cancer Classification ML 
 
-## BITS M.Tech AIML/DSE — Machine Learning Assignment 2
+## BITS M.Tech AIML — Machine Learning Assignment 2
 
 This repository contains an end-to-end classification project using the **Breast Cancer Wisconsin (Diagnostic)** dataset.
 
