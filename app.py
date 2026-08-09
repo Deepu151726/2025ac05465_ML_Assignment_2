@@ -32,7 +32,7 @@ from sklearn.metrics import (
 # ============================================================
 
 st.set_page_config(
-    page_title="Breast Cancer ML Lab",
+    page_title="Breast Cancer Classification ML Lab",
     page_icon="🧬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -40,7 +40,7 @@ st.set_page_config(
 
 
 # ============================================================
-# PATHS
+# PROJECT PATHS
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -48,14 +48,9 @@ BASE_DIR = Path(__file__).resolve().parent
 TRAIN_DATA_PATH = BASE_DIR / "train_data.csv"
 TEST_DATA_PATH = BASE_DIR / "test_data.csv"
 
-
-# ============================================================
-# CONSTANTS
-# ============================================================
-
+TARGET_COLUMN = "target"
 RANDOM_STATE = 42
 
-TARGET_COLUMN = "target"
 
 CLASS_NAMES = {
     0: "Malignant",
@@ -64,94 +59,14 @@ CLASS_NAMES = {
 
 
 # ============================================================
-# CUSTOM CSS
+# TITLE
 # ============================================================
 
-st.markdown(
-    """
-    <style>
+st.title("🧬 Breast Cancer Classification ML Lab")
 
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-
-    .hero {
-        padding: 1.8rem 2rem;
-        border-radius: 18px;
-        border: 1px solid rgba(128,128,128,0.25);
-        background: linear-gradient(
-            135deg,
-            rgba(60,100,160,0.10),
-            rgba(60,100,160,0.03)
-        );
-        margin-bottom: 1.4rem;
-    }
-
-    .hero-title {
-        font-size: 2.35rem;
-        font-weight: 750;
-        margin-bottom: 0.3rem;
-    }
-
-    .hero-subtitle {
-        font-size: 1.05rem;
-        opacity: 0.72;
-    }
-
-    .section-title {
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin-top: 0.6rem;
-        margin-bottom: 0.7rem;
-    }
-
-    .info-card {
-        border: 1px solid rgba(128,128,128,0.22);
-        border-radius: 14px;
-        padding: 1rem;
-        min-height: 105px;
-    }
-
-    .winner-card {
-        border: 1px solid rgba(60,150,80,0.35);
-        border-radius: 14px;
-        padding: 1.2rem;
-        background: rgba(60,150,80,0.07);
-    }
-
-    .footer-note {
-        text-align: center;
-        opacity: 0.55;
-        padding-top: 1.5rem;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
-# HEADER
-# ============================================================
-
-st.markdown(
-    """
-    <div class="hero">
-
-        <div class="hero-title">
-            🧬 Breast Cancer Classification ML Lab
-        </div>
-
-        <div class="hero-subtitle">
-            Six-model classification benchmark with interactive
-            evaluation, diagnostics and prediction analysis.
-        </div>
-
-    </div>
-    """,
-    unsafe_allow_html=True
+st.caption(
+    "Six-model classification benchmark with interactive "
+    "evaluation, diagnostics and prediction analysis."
 )
 
 
@@ -184,10 +99,14 @@ def validate_dataset(df):
         )
 
     if df[feature_columns].isnull().any().any():
-        return False, "Missing values were detected in the feature columns."
+        return False, (
+            "Missing values were detected in the feature columns."
+        )
 
     if df[TARGET_COLUMN].isnull().any():
-        return False, "Missing values were detected in the target column."
+        return False, (
+            "Missing values were detected in the target column."
+        )
 
     return True, ""
 
@@ -227,6 +146,10 @@ with st.sidebar:
         index=0
     )
 
+    # --------------------------------------------------------
+    # Repository Test Data
+    # --------------------------------------------------------
+
     if data_source == "Use test_data.csv from repository":
 
         if TEST_DATA_PATH.exists():
@@ -245,6 +168,10 @@ with st.sidebar:
             )
 
             st.stop()
+
+    # --------------------------------------------------------
+    # Uploaded Test Data
+    # --------------------------------------------------------
 
     else:
 
@@ -331,7 +258,7 @@ if not train_valid:
 
 
 # ============================================================
-# PREPARE TRAIN / TEST DATA
+# PREPARE TRAINING AND TEST DATA
 # ============================================================
 
 feature_columns = [
@@ -339,6 +266,7 @@ feature_columns = [
     for column in train_df.columns
     if column != TARGET_COLUMN
 ]
+
 
 X_train = train_df[feature_columns]
 y_train = train_df[TARGET_COLUMN].astype(int)
@@ -355,21 +283,21 @@ def create_models():
 
     models = {
 
-        "Logistic Regression": Pipeline([
-            (
-                "scaler",
-                StandardScaler()
-            ),
-
-            (
-                "classifier",
-                LogisticRegression(
-                    max_iter=5000,
-                    random_state=RANDOM_STATE
+        "Logistic Regression": Pipeline(
+            [
+                (
+                    "scaler",
+                    StandardScaler()
+                ),
+                (
+                    "classifier",
+                    LogisticRegression(
+                        max_iter=5000,
+                        random_state=RANDOM_STATE
+                    )
                 )
-            )
-        ]),
-
+            ]
+        ),
 
         "Decision Tree": DecisionTreeClassifier(
             max_depth=5,
@@ -377,24 +305,22 @@ def create_models():
             random_state=RANDOM_STATE
         ),
 
-
-        "kNN": Pipeline([
-            (
-                "scaler",
-                StandardScaler()
-            ),
-
-            (
-                "classifier",
-                KNeighborsClassifier(
-                    n_neighbors=7
+        "kNN": Pipeline(
+            [
+                (
+                    "scaler",
+                    StandardScaler()
+                ),
+                (
+                    "classifier",
+                    KNeighborsClassifier(
+                        n_neighbors=7
+                    )
                 )
-            )
-        ]),
-
+            ]
+        ),
 
         "Naive Bayes": GaussianNB(),
-
 
         "Random Forest": RandomForestClassifier(
             n_estimators=300,
@@ -403,7 +329,6 @@ def create_models():
             random_state=RANDOM_STATE,
             n_jobs=-1
         ),
-
 
         "Gradient Boosting": GradientBoostingClassifier(
             n_estimators=150,
@@ -417,7 +342,7 @@ def create_models():
 
 
 # ============================================================
-# TRAINING FUNCTION
+# MODEL TRAINING
 # ============================================================
 
 @st.cache_resource
@@ -436,7 +361,7 @@ def train_model(model_name, X_train, y_train):
 
 
 # ============================================================
-# EVALUATION FUNCTION
+# MODEL EVALUATION
 # ============================================================
 
 def evaluate_model(model, X, y):
@@ -447,44 +372,38 @@ def evaluate_model(model, X, y):
 
     metrics = {
 
-        "Accuracy":
-            accuracy_score(
-                y,
-                predictions
-            ),
+        "Accuracy": accuracy_score(
+            y,
+            predictions
+        ),
 
-        "AUC":
-            roc_auc_score(
-                y,
-                probabilities
-            ),
+        "AUC": roc_auc_score(
+            y,
+            probabilities
+        ),
 
-        "Precision":
-            precision_score(
-                y,
-                predictions,
-                zero_division=0
-            ),
+        "Precision": precision_score(
+            y,
+            predictions,
+            zero_division=0
+        ),
 
-        "Recall":
-            recall_score(
-                y,
-                predictions,
-                zero_division=0
-            ),
+        "Recall": recall_score(
+            y,
+            predictions,
+            zero_division=0
+        ),
 
-        "F1 Score":
-            f1_score(
-                y,
-                predictions,
-                zero_division=0
-            ),
+        "F1 Score": f1_score(
+            y,
+            predictions,
+            zero_division=0
+        ),
 
-        "MCC":
-            matthews_corrcoef(
-                y,
-                predictions
-            )
+        "MCC": matthews_corrcoef(
+            y,
+            predictions
+        )
     }
 
     return (
@@ -517,7 +436,7 @@ y_pred, y_prob, selected_metrics = evaluate_model(
 
 
 # ============================================================
-# STATUS
+# DATASET SUMMARY
 # ============================================================
 
 st.success(
@@ -528,13 +447,41 @@ st.success(
 
 
 # ============================================================
+# DATASET OVERVIEW
+# ============================================================
+
+st.subheader("📋 Dataset Overview")
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.metric(
+    "Training Samples",
+    len(X_train)
+)
+
+col2.metric(
+    "Test Samples",
+    len(X_test)
+)
+
+col3.metric(
+    "Features",
+    len(feature_columns)
+)
+
+col4.metric(
+    "Target Classes",
+    y_train.nunique()
+)
+
+
+# ============================================================
 # MODEL PERFORMANCE
 # ============================================================
 
-st.markdown(
-    '<div class="section-title">📊 Model Performance</div>',
-    unsafe_allow_html=True
-)
+st.divider()
+
+st.subheader("📊 Model Performance")
 
 metric_columns = st.columns(6)
 
@@ -550,17 +497,14 @@ for column, (metric_name, value) in zip(
 
 
 # ============================================================
-# SIX-MODEL BENCHMARK
+# SIX MODEL BENCHMARK
 # ============================================================
 
 if compare_models:
 
     st.divider()
 
-    st.markdown(
-        '<div class="section-title">🏆 Six-Model Benchmark</div>',
-        unsafe_allow_html=True
-    )
+    st.subheader("🏆 Six-Model Benchmark")
 
     all_results = []
 
@@ -647,38 +591,22 @@ if compare_models:
 
     winner = benchmark_df.iloc[0]
 
-    st.markdown(
-        f"""
-        <div class="winner-card">
-
-        <b>🏆 Best Test-Set Model</b><br><br>
-
-        <b>{winner["ML Model Name"]}</b><br>
-
-        Accuracy: {winner["Accuracy"]:.4f}
-        &nbsp; | &nbsp;
-        AUC: {winner["AUC"]:.4f}
-        &nbsp; | &nbsp;
-        F1: {winner["F1"]:.4f}
-        &nbsp; | &nbsp;
-        MCC: {winner["MCC"]:.4f}
-
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.success(
+        f"🏆 Best performing model: **{winner['ML Model Name']}**  |  "
+        f"Accuracy: **{winner['Accuracy']:.4f}**  |  "
+        f"AUC: **{winner['AUC']:.4f}**  |  "
+        f"F1: **{winner['F1']:.4f}**  |  "
+        f"MCC: **{winner['MCC']:.4f}**"
     )
 
 
 # ============================================================
-# DIAGNOSTICS
+# MODEL DIAGNOSTICS
 # ============================================================
 
 st.divider()
 
-st.markdown(
-    '<div class="section-title">🔎 Model Diagnostics</div>',
-    unsafe_allow_html=True
-)
+st.subheader("🔎 Model Diagnostics")
 
 tab1, tab2, tab3 = st.tabs(
     [
@@ -855,10 +783,7 @@ with tab3:
 
 st.divider()
 
-st.markdown(
-    '<div class="section-title">🔬 Prediction Explorer</div>',
-    unsafe_allow_html=True
-)
+st.subheader("🔬 Prediction Explorer")
 
 prediction_output = test_df.copy()
 
@@ -876,6 +801,7 @@ prediction_output["Prediction Confidence"] = np.maximum(
     1 - y_prob
 )
 
+
 st.dataframe(
     prediction_output.head(50).style.format(
         {
@@ -886,6 +812,10 @@ st.dataframe(
     use_container_width=True
 )
 
+
+# ============================================================
+# DOWNLOAD PREDICTIONS
+# ============================================================
 
 prediction_csv = prediction_output.to_csv(
     index=False
@@ -912,9 +842,7 @@ if show_raw_data:
 
     st.divider()
 
-    st.subheader(
-        "🗃️ Test Data"
-    )
+    st.subheader("🗃️ Test Data")
 
     st.dataframe(
         test_df,
@@ -928,59 +856,54 @@ if show_raw_data:
 
 st.divider()
 
+st.subheader("ℹ️ Project Information")
+
 info1, info2, info3 = st.columns(3)
 
 with info1:
 
-    st.markdown(
+    st.info(
         """
-        <div class="info-card">
+        **Dataset**
 
-        <b>Dataset</b><br>
+        Breast Cancer Wisconsin
 
-        Breast Cancer Wisconsin<br>
-        569 observations<br>
+        569 observations
+
         30 numerical features
-
-        </div>
-        """,
-        unsafe_allow_html=True
+        """
     )
 
 
 with info2:
 
-    st.markdown(
+    st.info(
         """
-        <div class="info-card">
+        **Classification**
 
-        <b>Classification</b><br>
+        Binary classification
 
-        Binary classification<br>
-        0 = Malignant<br>
+        0 = Malignant
+
         1 = Benign
-
-        </div>
-        """,
-        unsafe_allow_html=True
+        """
     )
 
 
 with info3:
 
-    st.markdown(
+    st.info(
         """
-        <div class="info-card">
+        **Evaluation**
 
-        <b>Evaluation</b><br>
+        Accuracy
 
-        Accuracy • AUC<br>
-        Precision • Recall<br>
+        AUC
+
+        Precision • Recall
+
         F1 • MCC
-
-        </div>
-        """,
-        unsafe_allow_html=True
+        """
     )
 
 
@@ -988,11 +911,8 @@ with info3:
 # FOOTER
 # ============================================================
 
-st.markdown(
-    """
-    <div class="footer-note">
-        Machine Learning Assignment 2 • Six-Model Classification Dashboard
-    </div>
-    """,
-    unsafe_allow_html=True
+st.divider()
+
+st.caption(
+    "Machine Learning Assignment 2 • Six-Model Classification Dashboard"
 )
