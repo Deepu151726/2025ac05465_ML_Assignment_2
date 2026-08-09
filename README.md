@@ -202,7 +202,7 @@ Predictions can be downloaded as a CSV file.
 ```text
 ML_Assignment_2/
 │
-├── ML_Assignment_2_Professional_6_Models.ipynb
+├── 2025ac05465_MachineLearning_Assignment.ipynb
 ├── app.py
 ├── requirements.txt
 ├── README.md
@@ -240,29 +240,7 @@ The application will open in a browser.
 
 ---
 
-## 11. Deployment
-
-The application can be deployed using Streamlit Community Cloud.
-
-### Deployment steps
-
-1. Push the complete project to GitHub.
-2. Open Streamlit Community Cloud.
-3. Connect the GitHub repository.
-4. Select the `main` branch.
-5. Select `app.py` as the main application file.
-6. Deploy the application.
-7. Test CSV upload and all dashboard features.
-
-### GitHub Repository
-
-**Add your final GitHub repository URL here after creating it.**
-
-`YOUR_GITHUB_REPOSITORY_URL`
-
 ### Streamlit Application
-
-**Add your deployed Streamlit URL here after deployment.**
 
 `YOUR_STREAMLIT_APP_URL`
 
@@ -281,30 +259,3 @@ The application uses:
 - Joblib
 
 All dependencies are listed in `requirements.txt`.
-
----
-
-## 13. Final Submission Checklist
-
-- [ ] Student name, BITS ID and section entered in notebook
-- [ ] Notebook executed successfully from beginning to end
-- [ ] Six models trained
-- [ ] Six `.joblib` files generated
-- [ ] `metrics.csv` generated
-- [ ] `train_data.csv` generated
-- [ ] `test_data.csv` generated
-- [ ] `dataset_info.csv` generated
-- [ ] `app.py` uploaded
-- [ ] `requirements.txt` uploaded
-- [ ] `README.md` uploaded
-- [ ] Streamlit application deployed
-- [ ] CSV upload tested
-- [ ] Model selection tested
-- [ ] Required metrics displayed
-- [ ] Confusion matrix tested
-- [ ] Classification report tested
-- [ ] ROC curve tested
-- [ ] Six-model comparison tested
-- [ ] Prediction CSV download tested
-- [ ] BITS Virtual Lab execution screenshot captured
-- [ ] Final submission PDF prepared
