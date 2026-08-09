@@ -57,55 +57,55 @@ MODEL_DESCRIPTIONS = {
 # ============================================================
 st.markdown(
     """
-<style>
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-}
+    <style>
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
 
-.hero {
-    padding: 1.6rem 1.8rem;
-    border-radius: 18px;
-    border: 1px solid rgba(128,128,128,0.22);
-    background: linear-gradient(
-        135deg,
-        rgba(128,128,128,0.10),
-        rgba(128,128,128,0.03)
-    );
-    margin-bottom: 1.2rem;
-}
+    .hero {
+        padding: 1.6rem 1.8rem;
+        border-radius: 18px;
+        border: 1px solid rgba(128,128,128,0.22);
+        background: linear-gradient(
+            135deg,
+            rgba(128,128,128,0.10),
+            rgba(128,128,128,0.03)
+        );
+        margin-bottom: 1.2rem;
+    }
 
-.hero-title {
-    font-size: 2.4rem;
-    font-weight: 750;
-    margin-bottom: 0.25rem;
-}
+    .hero-title {
+        font-size: 2.4rem;
+        font-weight: 750;
+        margin-bottom: 0.25rem;
+    }
 
-.hero-subtitle {
-    font-size: 1.05rem;
-    opacity: 0.72;
-}
+    .hero-subtitle {
+        font-size: 1.05rem;
+        opacity: 0.72;
+    }
 
-.section-title {
-    font-size: 1.35rem;
-    font-weight: 700;
-    margin-top: 0.5rem;
-}
+    .section-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-top: 0.5rem;
+    }
 
-.info-card {
-    border: 1px solid rgba(128,128,128,0.20);
-    border-radius: 14px;
-    padding: 1rem;
-    min-height: 110px;
-}
+    .info-card {
+        border: 1px solid rgba(128,128,128,0.20);
+        border-radius: 14px;
+        padding: 1rem;
+        min-height: 110px;
+    }
 
-.footer-note {
-    text-align: center;
-    opacity: 0.55;
-    padding-top: 1rem;
-}
-</style>
-""",
+    .footer-note {
+        text-align: center;
+        opacity: 0.55;
+        padding-top: 1rem;
+    }
+    </style>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -127,9 +127,10 @@ def validate_dataset(df, artifact):
     target = artifact["target_name"]
 
     missing = [column for column in features if column not in df.columns]
+
     if missing:
         return False, (
-            "The uploaded CSV is missing required feature columns: "
+            "The selected CSV is missing required feature columns: "
             + ", ".join(missing)
         ), None
 
@@ -181,16 +182,17 @@ def evaluate(artifact, df):
 # ============================================================
 st.markdown(
     """
-<div class="hero">
-    <div class="hero-title">🧬 Breast Cancer Classification ML Lab</div>
-    <div class="hero-subtitle">
-        Interactive evaluation, comparison and prediction dashboard
-        for six supervised machine-learning models.
+    <div class="hero">
+        <div class="hero-title">🧬 Breast Cancer Classification ML Lab</div>
+        <div class="hero-subtitle">
+            Interactive evaluation, comparison and prediction dashboard
+            for six supervised machine-learning models.
+        </div>
     </div>
-</div>
-""",
+    """,
     unsafe_allow_html=True,
 )
+
 
 # ============================================================
 # Sidebar
@@ -215,23 +217,71 @@ with st.sidebar:
 
     st.divider()
 
+    # ========================================================
+    # Test Dataset Selection
+    # ========================================================
     st.subheader("📂 Test Dataset")
 
-    uploaded = st.file_uploader(
-        "Upload CSV",
-        type=["csv"],
-        help="Upload a compatible test CSV containing the 30 features and target.",
+    data_source = st.radio(
+        "Choose test-data source",
+        options=[
+            "Use test_data.csv from repository",
+            "Upload another CSV",
+        ],
+        index=0,
+        help=(
+            "By default, the app uses the test_data.csv included in the "
+            "GitHub repository. You can optionally upload another compatible CSV."
+        ),
     )
 
-    if uploaded is not None:
-        data = pd.read_csv(uploaded)
-        source_label = uploaded.name
-    elif TEST_DATA_PATH.exists():
-        data = pd.read_csv(TEST_DATA_PATH)
-        source_label = "test_data.csv"
+    if data_source == "Use test_data.csv from repository":
+
+        if TEST_DATA_PATH.exists():
+            data = pd.read_csv(TEST_DATA_PATH)
+            source_label = "test_data.csv (repository)"
+
+            st.success(
+                f"Using repository test data: {len(data)} rows"
+            )
+
+        else:
+            st.error(
+                "test_data.csv was not found in the repository. "
+                "Please make sure the file is located beside app.py."
+            )
+            st.stop()
+
     else:
-        st.error("test_data.csv was not found.")
-        st.stop()
+
+        uploaded = st.file_uploader(
+            "Upload CSV",
+            type=["csv"],
+            help=(
+                "Upload a compatible test CSV containing the required "
+                "features and target column."
+            ),
+        )
+
+        if uploaded is None:
+            st.info(
+                "Please upload a CSV file to continue."
+            )
+            st.stop()
+
+        try:
+            data = pd.read_csv(uploaded)
+            source_label = uploaded.name
+
+            st.success(
+                f"Uploaded dataset: {uploaded.name} • {len(data)} rows"
+            )
+
+        except Exception as exc:
+            st.error(
+                f"Unable to read the uploaded CSV: {exc}"
+            )
+            st.stop()
 
     st.divider()
 
@@ -246,6 +296,7 @@ with st.sidebar:
     )
 
     st.divider()
+
     st.caption("ML Assignment 2")
     st.caption("Breast Cancer Wisconsin (Diagnostic)")
 
@@ -253,7 +304,9 @@ with st.sidebar:
 # ============================================================
 # Validate selected model and data
 # ============================================================
-selected_artifact = load_artifact(MODEL_FILES[selected_model])
+selected_artifact = load_artifact(
+    MODEL_FILES[selected_model]
+)
 
 valid, message, data = validate_dataset(
     data,
@@ -264,10 +317,12 @@ if not valid:
     st.error(message)
     st.stop()
 
+
 y_true, y_pred, y_prob, selected_metrics = evaluate(
     selected_artifact,
     data,
 )
+
 
 # ============================================================
 # Status banner
@@ -280,34 +335,61 @@ st.success(
 
 st.caption(MODEL_DESCRIPTIONS[selected_model])
 
+
 # ============================================================
 # KPI metrics
 # ============================================================
-st.markdown('<div class="section-title">📊 Model Performance</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-title">📊 Model Performance</div>',
+    unsafe_allow_html=True,
+)
+
 st.write("")
 
 cols = st.columns(6)
 
-for col, (name, value) in zip(cols, selected_metrics.items()):
-    col.metric(name, f"{value:.4f}")
+for col, (name, value) in zip(
+    cols,
+    selected_metrics.items(),
+):
+    col.metric(
+        name,
+        f"{value:.4f}",
+    )
+
 
 # ============================================================
 # All-model benchmark
 # ============================================================
 if show_comparison:
+
     st.divider()
-    st.markdown('<div class="section-title">🏆 Six-Model Benchmark</div>', unsafe_allow_html=True)
+
+    st.markdown(
+        '<div class="section-title">🏆 Six-Model Benchmark</div>',
+        unsafe_allow_html=True,
+    )
 
     rows = []
 
     for model_name in installed_models:
-        artifact = load_artifact(MODEL_FILES[model_name])
-        ok, _, model_data = validate_dataset(data, artifact)
+
+        artifact = load_artifact(
+            MODEL_FILES[model_name]
+        )
+
+        ok, _, model_data = validate_dataset(
+            data,
+            artifact,
+        )
 
         if not ok:
             continue
 
-        _, _, _, metrics = evaluate(artifact, model_data)
+        _, _, _, metrics = evaluate(
+            artifact,
+            model_data,
+        )
 
         rows.append(
             {
@@ -321,30 +403,36 @@ if show_comparison:
             }
         )
 
-    benchmark = pd.DataFrame(rows).sort_values(
-        ["F1 Score", "AUC", "MCC"],
-        ascending=False,
-    ).reset_index(drop=True)
+    if rows:
 
-    benchmark.insert(0, "Rank", np.arange(1, len(benchmark) + 1))
+        benchmark = pd.DataFrame(rows).sort_values(
+            ["F1 Score", "AUC", "MCC"],
+            ascending=False,
+        ).reset_index(drop=True)
 
-    st.dataframe(
-        benchmark.style.format(
-            {
-                "Accuracy": "{:.4f}",
-                "AUC": "{:.4f}",
-                "Precision": "{:.4f}",
-                "Recall": "{:.4f}",
-                "F1 Score": "{:.4f}",
-                "MCC": "{:.4f}",
-            }
-        ),
-        use_container_width=True,
-        hide_index=True,
-    )
+        benchmark.insert(
+            0,
+            "Rank",
+            np.arange(1, len(benchmark) + 1),
+        )
 
-    if not benchmark.empty:
+        st.dataframe(
+            benchmark.style.format(
+                {
+                    "Accuracy": "{:.4f}",
+                    "AUC": "{:.4f}",
+                    "Precision": "{:.4f}",
+                    "Recall": "{:.4f}",
+                    "F1 Score": "{:.4f}",
+                    "MCC": "{:.4f}",
+                }
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+
         leader = benchmark.iloc[0]
+
         st.info(
             f"**Current test-set leader:** {leader['Model']}  |  "
             f"F1 = {leader['F1 Score']:.4f}  |  "
@@ -352,11 +440,21 @@ if show_comparison:
             f"MCC = {leader['MCC']:.4f}"
         )
 
+    else:
+        st.warning(
+            "No models could be evaluated with the selected dataset."
+        )
+
+
 # ============================================================
 # Diagnostics
 # ============================================================
 st.divider()
-st.markdown('<div class="section-title">🔎 Model Diagnostics</div>', unsafe_allow_html=True)
+
+st.markdown(
+    '<div class="section-title">🔎 Model Diagnostics</div>',
+    unsafe_allow_html=True,
+)
 
 tab_cm, tab_roc, tab_report = st.tabs(
     [
@@ -366,19 +464,43 @@ tab_cm, tab_roc, tab_report = st.tabs(
     ]
 )
 
-with tab_cm:
-    cm = confusion_matrix(y_true, y_pred)
 
-    fig, ax = plt.subplots(figsize=(6.5, 5))
+# ============================================================
+# Confusion Matrix
+# ============================================================
+with tab_cm:
+
+    cm = confusion_matrix(
+        y_true,
+        y_pred,
+    )
+
+    fig, ax = plt.subplots(
+        figsize=(6.5, 5)
+    )
+
     image = ax.imshow(cm)
-    ax.set_title(f"Confusion Matrix — {selected_model}")
+
+    ax.set_title(
+        f"Confusion Matrix — {selected_model}"
+    )
+
     ax.set_xlabel("Predicted Label")
     ax.set_ylabel("True Label")
-    ax.set_xticks([0, 1], ["Malignant", "Benign"])
-    ax.set_yticks([0, 1], ["Malignant", "Benign"])
+
+    ax.set_xticks(
+        [0, 1],
+        ["Malignant", "Benign"],
+    )
+
+    ax.set_yticks(
+        [0, 1],
+        ["Malignant", "Benign"],
+    )
 
     for i in range(2):
         for j in range(2):
+
             ax.text(
                 j,
                 i,
@@ -388,30 +510,71 @@ with tab_cm:
                 fontsize=14,
             )
 
-    fig.colorbar(image, ax=ax)
+    fig.colorbar(
+        image,
+        ax=ax,
+    )
+
     fig.tight_layout()
+
     st.pyplot(fig)
+
     plt.close(fig)
 
     tn, fp, fn, tp = cm.ravel()
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("True Negatives", tn)
-    c2.metric("False Positives", fp)
-    c3.metric("False Negatives", fn)
-    c4.metric("True Positives", tp)
 
+    c1.metric(
+        "True Negatives",
+        tn,
+    )
+
+    c2.metric(
+        "False Positives",
+        fp,
+    )
+
+    c3.metric(
+        "False Negatives",
+        fn,
+    )
+
+    c4.metric(
+        "True Positives",
+        tp,
+    )
+
+
+# ============================================================
+# ROC Curve
+# ============================================================
 with tab_roc:
-    fpr, tpr, _ = roc_curve(y_true, y_prob)
-    roc_auc = auc(fpr, tpr)
 
-    fig, ax = plt.subplots(figsize=(7.5, 5.2))
+    fpr, tpr, _ = roc_curve(
+        y_true,
+        y_prob,
+    )
+
+    roc_auc = auc(
+        fpr,
+        tpr,
+    )
+
+    fig, ax = plt.subplots(
+        figsize=(7.5, 5.2)
+    )
+
     ax.plot(
         fpr,
         tpr,
         linewidth=2,
-        label=f"{selected_model} — AUC {roc_auc:.4f}",
+        label=(
+            f"{selected_model} — "
+            f"AUC {roc_auc:.4f}"
+        ),
     )
+
     ax.plot(
         [0, 1],
         [0, 1],
@@ -419,25 +582,53 @@ with tab_roc:
         linewidth=1,
         label="Random classifier",
     )
-    ax.set_xlabel("False Positive Rate")
-    ax.set_ylabel("True Positive Rate")
-    ax.set_title("ROC Curve")
-    ax.legend(loc="lower right")
-    ax.grid(alpha=0.2)
+
+    ax.set_xlabel(
+        "False Positive Rate"
+    )
+
+    ax.set_ylabel(
+        "True Positive Rate"
+    )
+
+    ax.set_title(
+        "ROC Curve"
+    )
+
+    ax.legend(
+        loc="lower right"
+    )
+
+    ax.grid(
+        alpha=0.2
+    )
+
     fig.tight_layout()
+
     st.pyplot(fig)
+
     plt.close(fig)
 
+
+# ============================================================
+# Classification Report
+# ============================================================
 with tab_report:
+
     report = classification_report(
         y_true,
         y_pred,
-        target_names=["Malignant", "Benign"],
+        target_names=[
+            "Malignant",
+            "Benign",
+        ],
         output_dict=True,
         zero_division=0,
     )
 
-    report_df = pd.DataFrame(report).T
+    report_df = pd.DataFrame(
+        report
+    ).T
 
     st.dataframe(
         report_df.style.format(
@@ -451,21 +642,29 @@ with tab_report:
         use_container_width=True,
     )
 
+
 # ============================================================
-# Prediction explorer
+# Prediction Explorer
 # ============================================================
 st.divider()
-st.markdown('<div class="section-title">🔬 Prediction Explorer</div>', unsafe_allow_html=True)
+
+st.markdown(
+    '<div class="section-title">🔬 Prediction Explorer</div>',
+    unsafe_allow_html=True,
+)
 
 prediction_output = data.copy()
 
 prediction_output["Predicted Target"] = y_pred
+
 prediction_output["Predicted Class"] = np.where(
     y_pred == 1,
     "Benign",
     "Malignant",
 )
+
 prediction_output["Benign Probability"] = y_prob
+
 prediction_output["Prediction Confidence"] = np.maximum(
     y_prob,
     1 - y_prob,
@@ -481,7 +680,9 @@ st.dataframe(
     use_container_width=True,
 )
 
-prediction_csv = prediction_output.to_csv(index=False).encode("utf-8")
+prediction_csv = prediction_output.to_csv(
+    index=False
+).encode("utf-8")
 
 st.download_button(
     "⬇️ Download Predictions CSV",
@@ -495,6 +696,7 @@ st.download_button(
     mime="text/csv",
 )
 
+
 # ============================================================
 # Project information
 # ============================================================
@@ -503,6 +705,7 @@ st.divider()
 info1, info2, info3 = st.columns(3)
 
 with info1:
+
     st.markdown(
         """
         <div class="info-card">
@@ -515,6 +718,7 @@ with info1:
     )
 
 with info2:
+
     st.markdown(
         """
         <div class="info-card">
@@ -527,6 +731,7 @@ with info2:
     )
 
 with info3:
+
     st.markdown(
         """
         <div class="info-card">
@@ -538,14 +743,21 @@ with info3:
         unsafe_allow_html=True,
     )
 
+
 with st.expander("ℹ️ About the selected model"):
-    st.write(MODEL_DESCRIPTIONS[selected_model])
+
+    st.write(
+        MODEL_DESCRIPTIONS[selected_model]
+    )
+
     st.write(
         "The model artifact was trained in the accompanying notebook "
         "and loaded from the repository using joblib."
     )
 
+
 with st.expander("📘 Dataset Information"):
+
     st.markdown(
         """
         **Breast Cancer Wisconsin (Diagnostic)**
@@ -560,12 +772,22 @@ with st.expander("📘 Dataset Information"):
         """
     )
 
+
 if show_raw_data:
+
     st.divider()
+
     st.subheader("🗃️ Raw Test Data")
-    st.dataframe(data, use_container_width=True)
+
+    st.dataframe(
+        data,
+        use_container_width=True,
+    )
+
 
 st.markdown(
-    '<div class="footer-note">ML Assignment 2 • Six-model classification evaluation dashboard</div>',
+    '<div class="footer-note">'
+    'ML Assignment 2 • Six-model classification evaluation dashboard'
+    '</div>',
     unsafe_allow_html=True,
 )
